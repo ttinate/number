@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>數字與物品數量 🌟</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+
+  :root {
+    --pink:    #FFB5C8;
+    --peach:   #FFCBA4;
+    --yellow:  #FFE28A;
+    --mint:    #B5EAD7;
+    --sky:     #C7E9FB;
+    --lavender:#D4C5F9;
+    --text:    #5A4A6A;
+    --correct: #7BCF8E;
+    --wrong:   #FF8FA3;
+    --shadow:  rgba(90,74,106,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(135deg, #FFF0F5 0%, #F0F8FF 50%, #F5FFF0 100%);
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 0 0 40px; overflow-x: hidden;
+  }
+
+  /* ══════ START SCREEN ══════ */
+  #startScreen {
+    position: fixed; inset: 0;
+    background: linear-gradient(160deg, #FFE4EF 0%, #EDE4FF 50%, #E4F4FF 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start;
+    z-index: 200; padding: 30px 20px 40px;
+    overflow-y: auto; gap: 0;
+    animation: fadeIn 0.5s ease;
+  }
+  .start-logo {
+    font-size: clamp(1.9rem, 7.5vw, 2.8rem);
+    font-weight: 900; color: var(--text);
+    text-align: center; line-height: 1.2; margin-bottom: 6px;
+  }
+  .start-logo .big-emoji { font-size: clamp(3rem, 11vw, 4.2rem); display: block; }
+  .start-sub { font-size: 1rem; color: #9A8AAA; text-align: center; margin-bottom: 26px; }
+
+  .picker-title {
+    font-size: 1rem; font-weight: 900; color: var(--text);
+    margin-bottom: 13px; text-align: center;
+    display: flex; align-items: center; gap: 8px; width: 100%; max-width: 420px;
+  }
+  .picker-title::before, .picker-title::after {
+    content: ''; flex: 1; height: 2px; border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--lavender), transparent);
+  }
+
+  .category-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 12px; width: 100%; max-width: 920px; margin-bottom: 26px;
+  }
+
+  .cat-btn {
+    background: white; border: 3px solid transparent; border-radius: 20px;
+    padding: 14px 8px 12px; cursor: pointer; font-family: inherit;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    box-shadow: 0 3px 12px var(--shadow);
+    transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s, background 0.18s;
+    position: relative;
+  }
+  .cat-btn:active { transform: scale(0.92); }
+  .cat-btn .cat-icon { font-size: 2.2rem; line-height: 1; }
+  .cat-btn .cat-name { font-size: 0.92rem; font-weight: 900; color: var(--text); }
+  .cat-btn.selected {
+    border-color: var(--lavender);
+    background: linear-gradient(145deg, #F3EEFF, #EEF5FF);
+    box-shadow: 0 4px 16px rgba(180,150,255,0.3);
+    transform: scale(1.05);
+  }
+  .cat-btn.selected::after {
+    content: '✓'; position: absolute; top: -9px; right: -9px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--lavender); color: white;
+    font-size: 0.72rem; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .btn-start {
+    background: linear-gradient(135deg, var(--pink), var(--lavender));
+    border: none; border-radius: 60px;
+    padding: 20px 64px; font-size: 1.5rem; font-weight: 900;
+    color: white; cursor: pointer;
+    box-shadow: 0 6px 24px rgba(255,181,200,0.5);
+    font-family: inherit; letter-spacing: 1px;
+    animation: pulse 2s infinite;
+  }
+  .btn-start:active { transform: scale(0.94) !important; }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 6px 24px rgba(255,181,200,0.5); transform: scale(1); }
+    50%      { box-shadow: 0 10px 32px rgba(212,181,255,0.6); transform: scale(1.03); }
+  }
+
+  /* ══════ HEADER ══════ */
+  header {
+    width: 100%;
+    background: linear-gradient(135deg, var(--pink), var(--lavender));
+    padding: 11px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 4px 16px var(--shadow);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-size: 1.25rem; font-weight: 900; color: white;
+          text-shadow: 0 2px 6px rgba(0,0,0,0.15);
+          display: flex; align-items: center; gap: 5px; }
+  .score-area { display: flex; gap: 7px; align-items: center; }
+  .score-badge {
+    background: white; border-radius: 50px; padding: 5px 13px;
+    font-weight: 900; font-size: 0.95rem; color: var(--text);
+    box-shadow: 0 2px 8px var(--shadow); display: flex; align-items: center; gap: 4px;
+  }
+  #correctCount { color: #7BCF8E; font-size: 1.15rem; }
+  .btn-header {
+    background: white; border: none; border-radius: 50px;
+    padding: 6px 13px; font-size: 0.82rem; font-weight: 700;
+    cursor: pointer; box-shadow: 0 2px 8px var(--shadow);
+    transition: transform 0.15s; font-family: inherit;
+  }
+  .btn-header.red  { color: var(--wrong); }
+  .btn-header.blue { color: #7ABCFF; }
+  .btn-header:active { transform: scale(0.91); }
+
+  /* ══════ GAME AREA ══════ */
+  #gameArea {
+    width: 100%; max-width: 700px;
+    padding: 14px 13px 0;
+    display: none; flex-direction: column; align-items: center; gap: 14px;
+  }
+
+  .progress-wrap {
+    width: 100%; background: rgba(255,255,255,0.7);
+    border-radius: 50px; height: 10px; overflow: hidden;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .progress-bar {
+    height: 100%; border-radius: 50px;
+    background: linear-gradient(90deg, var(--pink), var(--lavender));
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .instruction {
+    background: white; border-radius: 20px;
+    padding: 11px 20px; box-shadow: 0 4px 16px var(--shadow);
+    font-size: 1.05rem; font-weight: 700; color: var(--text);
+    text-align: center; width: 100%; border: 2px solid var(--pink);
+  }
+  .find-text { color: #9A7ABB; }
+  .target-number-inline {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--pink), var(--lavender));
+    color: white; border-radius: 10px;
+    padding: 1px 14px; font-size: 1.3rem; font-weight: 900; margin: 0 4px;
+    animation: numberPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+  }
+
+  /* Number circle */
+  .number-display {
+    position: relative; width: 148px; height: 148px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .number-ring {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(from 0deg,var(--pink),var(--lavender),var(--sky),var(--mint),var(--yellow),var(--peach),var(--pink));
+    animation: spin 8s linear infinite; filter: blur(2px);
+  }
+  .number-inner {
+    position: relative; z-index: 1; width: 126px; height: 126px; border-radius: 50%;
+    background: white; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px var(--shadow);
+  }
+  .big-number {
+    font-size: 4.8rem; font-weight: 900; line-height: 1;
+    background: linear-gradient(135deg, #FF85A1, #B57BFF);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    animation: numberPop 0.6s cubic-bezier(0.175,0.885,0.32,1.275);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes numberPop {
+    0%   { transform: scale(0.4); opacity: 0; }
+    100% { transform: scale(1);   opacity: 1; }
+  }
+
+  /* ══════ CARDS ══════ */
+  .cards-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; width: 100%;
+  }
+  .card {
+    border-radius: 28px; padding: 13px 10px 16px;
+    box-shadow: 0 6px 24px var(--shadow);
+    cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    border: 3px solid transparent;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative; overflow: hidden;
+    user-select: none; -webkit-user-select: none;
+    min-height: 210px;
+  }
+  .card.left  { background: linear-gradient(160deg, #FFFAF0, #FFF0F8); }
+  .card.right { background: linear-gradient(160deg, #F0F9FF, #F0FFF8); }
+  .card:active { transform: scale(0.95); }
+  .card:hover  { box-shadow: 0 10px 32px var(--shadow); }
+  .card-label { font-size: 0.78rem; font-weight: 900; letter-spacing: 2px; color: #C0B0D0; }
+
+  /* ── Item grid ── */
+  .items-grid {
+    display: grid; gap: 8px; width: 100%;
+    justify-items: center; align-items: center; flex: 1;
+    justify-content: center;
+  }
+  .item-emoji {
+    /* BIGGER */
+    font-size: clamp(2.3rem, 9vw, 3.1rem);
+    display: flex; align-items: center; justify-content: center;
+    width:  clamp(58px, 15.5vw, 78px);
+    height: clamp(58px, 15.5vw, 78px);
+    background: white; border-radius: 20px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.09);
+    animation: itemIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275) both;
+    transition: transform 0.12s;
+  }
+  .card:active .item-emoji { transform: scale(0.88); }
+  @keyframes itemIn {
+    0%   { transform: scale(0) rotate(-25deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0deg);   opacity: 1; }
+  }
+  .item-emoji:nth-child(1)  { animation-delay: 0.03s; }
+  .item-emoji:nth-child(2)  { animation-delay: 0.07s; }
+  .item-emoji:nth-child(3)  { animation-delay: 0.11s; }
+  .item-emoji:nth-child(4)  { animation-delay: 0.15s; }
+  .item-emoji:nth-child(5)  { animation-delay: 0.19s; }
+  .item-emoji:nth-child(6)  { animation-delay: 0.23s; }
+  .item-emoji:nth-child(7)  { animation-delay: 0.27s; }
+  .item-emoji:nth-child(8)  { animation-delay: 0.31s; }
+  .item-emoji:nth-child(9)  { animation-delay: 0.35s; }
+
+  /* Feedback */
+  .card.correct {
+    border-color: var(--correct) !important;
+    background: linear-gradient(160deg, #F0FFF4, #E4FFEE) !important;
+    animation: correctBounce 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+  }
+  .card.wrong {
+    border-color: var(--wrong) !important;
+    background: linear-gradient(160deg, #FFF0F2, #FFE8EA) !important;
+    animation: shake 0.4s ease;
+  }
+  @keyframes correctBounce {
+    0%  { transform: scale(1); }  40% { transform: scale(1.07); }
+    70% { transform: scale(0.97); } 100% { transform: scale(1); }
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); } 20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }   60% { transform: translateX(-6px); }
+    80% { transform: translateX(5px); }
+  }
+  .card-overlay {
+    position: absolute; inset: 0; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 3.5rem; border-radius: 26px;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 10;
+  }
+  .card.correct .card-overlay,
+  .card.wrong   .card-overlay {
+    opacity: 1; background: rgba(255,255,255,0.72); backdrop-filter: blur(4px);
+  }
+
+  .card.wrong .card-overlay {
+    background: rgba(255, 110, 130, 0.22);
+  }
+
+  .card.correct .card-overlay {
+    background: rgba(120, 220, 150, 0.18);
+  }
+
+  .praise-text {
+    position: absolute;
+    left: 50%;
+    bottom: 26px;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.92);
+    color: #5A4A6A;
+    border-radius: 999px;
+    padding: 10px 20px;
+    font-size: 1.25rem;
+    font-weight: 900;
+    box-shadow: 0 4px 14px rgba(90,74,106,0.18);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 11;
+  }
+
+  .card.correct .praise-text {
+    opacity: 1;
+  }
+  .card.correct .card-overlay::after {
+    content: '👍';
+    font-size: 5rem;
+  }
+  .card.wrong   .card-overlay::after {
+    content: '❌';
+    font-size: 5rem;
+  }
+
+  /* Next btn */
+  .btn-next {
+    background: linear-gradient(135deg, var(--mint), var(--sky));
+    border: none; border-radius: 60px;
+    padding: 17px 54px; font-size: 1.25rem; font-weight: 900;
+    color: var(--text); cursor: pointer;
+    box-shadow: 0 6px 20px rgba(181,234,215,0.5);
+    font-family: inherit; display: none;
+    animation: fadeUp 0.4s ease; margin-top: 2px;
+  }
+  .btn-next.show { display: block; }
+  .btn-next:active { transform: scale(0.94); }
+  @keyframes fadeUp {
+    from { transform: translateY(18px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  /* ══════ CONFETTI ══════ */
+  .confetti-piece {
+    position: fixed; border-radius: 3px;
+    top: -20px; pointer-events: none;
+    animation: confettiFall linear forwards; z-index: 300;
+  }
+  @keyframes confettiFall {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ══════ CELEB MODAL ══════ */
+  #celebModal {
+    position: fixed; inset: 0; z-index: 400;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(255,240,252,0.88); backdrop-filter: blur(8px);
+  }
+  #celebModal.show { display: flex; }
+  .celeb-box {
+    background: white; border-radius: 32px;
+    padding: 38px 42px; text-align: center;
+    box-shadow: 0 16px 64px rgba(212,197,249,0.4);
+    animation: popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+    max-width: 340px; width: 90%;
+  }
+  .celeb-emoji { font-size: 4rem; display: block; margin-bottom: 10px; }
+  .celeb-title { font-size: 2rem; font-weight: 900; color: var(--text); margin-bottom: 6px; }
+  .celeb-sub   { font-size: 1rem; color: #9A8AAA; margin-bottom: 8px; }
+  .celeb-score { font-size: 3rem; font-weight: 900; color: var(--lavender); margin-bottom: 6px; }
+  .celeb-btns  { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+  .btn-celeb {
+    border: none; border-radius: 50px;
+    padding: 15px 36px; font-size: 1.1rem; font-weight: 900;
+    cursor: pointer; font-family: inherit; transition: transform 0.15s;
+  }
+  .btn-celeb:active { transform: scale(0.94); }
+  .btn-celeb.primary   { background: linear-gradient(135deg,var(--pink),var(--lavender)); color: white; box-shadow: 0 4px 16px rgba(212,197,249,0.4); }
+  .btn-celeb.secondary { background: linear-gradient(135deg,var(--mint),var(--sky)); color: var(--text); }
+  @keyframes popIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+  /* ══════ RESPONSIVE ══════ */
+  @media (max-width: 700px) {
+    .category-grid { grid-template-columns: repeat(3, 1fr); max-width: 100%; }
+  }
+
+  @media (max-width: 480px) {
+    .category-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; max-width: 100%; }
+  }
+
+  @media (max-width: 380px) {
+    .category-grid { gap: 7px; }
+    .cat-btn { padding: 10px 4px 8px; }
+    .cat-btn .cat-icon { font-size: 1.8rem; }
+    .cat-btn .cat-name { font-size: 0.72rem; }
+    .number-display { width: 128px; height: 128px; }
+    .number-inner   { width: 108px; height: 108px; }
+    .big-number     { font-size: 4rem; }
+    .item-emoji     { width: 52px; height: 52px; font-size: 2rem; }
+    .card           { min-height: 190px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════ START SCREEN ══════ -->
+<div id="startScreen">
+  <div class="start-logo">
+    <span class="big-emoji">🌈</span>
+    數字與物品數量
+  </div>
+  <p class="start-sub">找出有正確數量的圖片！點擊它就對了 ✨</p>
+
+  <div class="picker-title">選擇你喜歡的主題</div>
+
+  <div class="category-grid">
+    <button class="cat-btn selected" data-cat="mixed">
+      <span class="cat-icon">🌈</span><span class="cat-name">全部混合</span>
+    </button>
+    <button class="cat-btn" data-cat="cats">
+      <span class="cat-icon">🐱</span><span class="cat-name">貓貓</span>
+    </button>
+    <button class="cat-btn" data-cat="dogs">
+      <span class="cat-icon">🐶</span><span class="cat-name">狗狗</span>
+    </button>
+    <button class="cat-btn" data-cat="animals">
+      <span class="cat-icon">🐾</span><span class="cat-name">動物</span>
+    </button>
+    <button class="cat-btn" data-cat="fish">
+      <span class="cat-icon">🐟</span><span class="cat-name">魚類</span>
+    </button>
+    <button class="cat-btn" data-cat="dinos">
+      <span class="cat-icon">🦖</span><span class="cat-name">恐龍</span>
+    </button>
+    <button class="cat-btn" data-cat="fruits">
+      <span class="cat-icon">🍎</span><span class="cat-name">水果</span>
+    </button>
+    <button class="cat-btn" data-cat="food">
+      <span class="cat-icon">🍞</span><span class="cat-name">食品</span>
+    </button>
+    <button class="cat-btn" data-cat="drinks">
+      <span class="cat-icon">🧋</span><span class="cat-name">飲料</span>
+    </button>
+    <button class="cat-btn" data-cat="cars">
+      <span class="cat-icon">🚗</span><span class="cat-name">車車</span>
+    </button>
+    <button class="cat-btn" data-cat="rescue">
+      <span class="cat-icon">🚒</span><span class="cat-name">救援車</span>
+    </button>
+    <button class="cat-btn" data-cat="toys">
+      <span class="cat-icon">🧸</span><span class="cat-name">玩具</span>
+    </button>
+    <button class="cat-btn" data-cat="sports">
+      <span class="cat-icon">⚽</span><span class="cat-name">球類</span>
+    </button>
+    <button class="cat-btn" data-cat="emoji">
+      <span class="cat-icon">😀</span><span class="cat-name">表情</span>
+    </button>
+    <button class="cat-btn" data-cat="weather">
+      <span class="cat-icon">🌈</span><span class="cat-name">天氣</span>
+    </button>
+    <button class="cat-btn" data-cat="space">
+      <span class="cat-icon">🚀</span><span class="cat-name">太空</span>
+    </button>
+    <button class="cat-btn" data-cat="home">
+      <span class="cat-icon">🏠</span><span class="cat-name">生活用品</span>
+    </button>
+    <button class="cat-btn" data-cat="hearts">
+      <span class="cat-icon">❤️</span><span class="cat-name">愛心</span>
+    </button>
+  </div>
+
+  <button class="btn-start" id="btnStart">開始遊戲 🎮</button>
+</div>
+
+<!-- ══════ HEADER ══════ -->
+<header>
+  <div class="logo">
+    <span id="headerIcon">🌈</span>
+    <span id="headerTitle">數數遊戲</span>
+  </div>
+  <div class="score-area">
+    <div class="score-badge">⭐ <span id="correctCount">0</span></div>
+    <button class="btn-header blue" id="btnChangeCat">換主題 🎨</button>
+    <button class="btn-header red"  id="btnClear">清空 🗑️</button>
+  </div>
+</header>
+
+<!-- ══════ GAME AREA ══════ -->
+<div id="gameArea">
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progressBar" style="width:0%"></div>
+  </div>
+
+  <div class="instruction">
+    <span class="find-text">找出</span>
+    <span class="target-number-inline" id="targetLabel">?</span>
+    <span class="find-text">個</span>
+  </div>
+
+  <div class="number-display">
+    <div class="number-ring"></div>
+    <div class="number-inner">
+      <div class="big-number" id="bigNumber">?</div>
+    </div>
+  </div>
+
+  <div class="cards-row">
+    <div class="card left" id="cardLeft">
+      <div class="card-label">左邊</div>
+      <div class="items-grid" id="gridLeft"></div>
+      <div class="card-overlay"></div>
+      <div class="praise-text">你好棒</div>
+    </div>
+    <div class="card right" id="cardRight">
+      <div class="card-label">右邊</div>
+      <div class="items-grid" id="gridRight"></div>
+      <div class="card-overlay"></div>
+      <div class="praise-text">你好棒</div>
+    </div>
+  </div>
+
+  <button class="btn-next" id="btnNext">下一題 ➡️</button>
+</div>
+
+<!-- ══════ CELEB MODAL ══════ -->
+<div id="celebModal">
+  <div class="celeb-box">
+    <span class="celeb-emoji" id="celebEmoji">🏆</span>
+    <div class="celeb-title">太棒了！</div>
+    <div class="celeb-sub">你完成所有題目！</div>
+    <div class="celeb-score" id="finalScore">0 / 0</div>
+    <div class="celeb-btns">
+      <button class="btn-celeb primary"   id="btnReplay">再玩一次 🎉</button>
+      <button class="btn-celeb secondary" id="btnChangeCat2">換個主題 🎨</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  CATEGORY DATA
+// ══════════════════════════════════════════════════════
+const CATEGORIES = {
+  mixed: {
+    name:'全部混合',
+    icon:'🌈',
+    emojis:[
+      '🐱','😺','😸','😹','😻',
+      '🐶','🐕','🐕‍🦺','🐩','🐾',
+      '🐰','🐼','🐯','🐸','🐵',
+      '🐟','🐠','🐡','🦈','🐬',
+      '🦖','🦕','🦴','🥚','🌋',
+      '🍎','🍌','🍓','🍇','🍊',
+      '🍞','🍪','🍔','🍕','🍩',
+      '🧋','🥛','🧃','🧉','☕',
+      '🚗','🚕','🚌','🚓','🚒',
+      '🚐','🚑','🚒','🚓','🚕',
+      '🧸','⚽','🎈','🪁','🪀',
+      '⚽','🏀','🏈','⚾','🎾',
+      '😀','😢','😡','😍','😴',
+      '☀️','🌧️','🌈','🌙','⭐',
+      '🚀','🛸','🌍','🌙','⭐',
+      '🪑','🛏️','🚿','🧴','🪥',
+      '❤️','💛','💚','💙','💜'
+    ]
+  },
+  cats:    { name:'貓貓', icon:'🐱', emojis:['🐱','😺','😸','😹','😻'] },
+  dogs:    { name:'狗狗', icon:'🐶', emojis:['🐶','🐕','🐕‍🦺','🐩','🐾'] },
+  animals: { name:'動物', icon:'🐾', emojis:['🐰','🐼','🐯','🐸','🐵'] },
+  fish:    { name:'魚類', icon:'🐟', emojis:['🐟','🐠','🐡','🦈','🐬'] },
+  dinos:   { name:'恐龍', icon:'🦖', emojis:['🦖','🦕','🦴','🥚','🌋'] },
+  fruits:  { name:'水果', icon:'🍎', emojis:['🍎','🍌','🍓','🍇','🍊'] },
+  food:    { name:'食品', icon:'🍞', emojis:['🍞','🍪','🍔','🍕','🍩'] },
+  drinks:  { name:'飲料', icon:'🧋', emojis:['🧋','🥛','🧃','🧉','☕'] },
+  cars:   { name:'車車', icon:'🚗', emojis:['🚗','🚕','🚌','🚙','🚚'] },
+  rescue: { name:'救援車', icon:'🚒', emojis:['🚑','🚒','🚓','🚁','🚐'] },
+  toys:    { name:'玩具', icon:'🧸', emojis:['🧸','⚽','🎈','🪁','🪀'] },
+  sports:  { name:'球類', icon:'⚽', emojis:['⚽','🏀','🏈','⚾','🎾'] },
+  emoji:   { name:'表情', icon:'😀', emojis:['😀','😢','😡','😍','😴'] },
+  weather: { name:'天氣', icon:'🌈', emojis:['☀️','🌧️','🌈','🌙','⭐'] },
+  space:   { name:'太空', icon:'🚀', emojis:['🚀','🛸','🌍','🌙','⭐'] },
+  home:    { name:'生活用品', icon:'🏠', emojis:['🪑','🛏️','🚿','🧴','🪥'] },
+  hearts:  { name:'愛心', icon:'❤️', emojis:['❤️','💛','💚','💙','💜'] }
+};
+
+const TOTAL_ROUNDS = 8;
+const MAX_NUM = 9;
+
+// ══════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════
+let state = { score: 0, round: 0, answered: false, questions: [], category: 'mixed' };
+
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem('numGame3') || '{}');
+    state.score    = s.score    || 0;
+    state.category = s.category || 'mixed';
+    document.getElementById('correctCount').textContent = state.score;
+    selectCategoryUI(state.category);
+  } catch(e) {}
+}
+function saveState() {
+  localStorage.setItem('numGame3', JSON.stringify({ score: state.score, category: state.category }));
+}
+
+// ══════════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════════
+const randInt = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const shuffle = arr => [...arr].sort(() => Math.random()-0.5);
+
+function getGridCols(n) {
+  if (n === 1) return 1;
+  if (n <= 4) return 2;
+  return 3;
+}
+
+// ══════════════════════════════════════════════════════
+//  QUESTION GENERATION
+// ══════════════════════════════════════════════════════
+function generateQuestions() {
+  const pool = shuffle(CATEGORIES[state.category].emojis);
+  const qs = [];
+  for (let i = 0; i < TOTAL_ROUNDS; i++) {
+    const target = randInt(1, MAX_NUM);
+    let other; do { other = randInt(1, MAX_NUM); } while (other === target);
+    const correctSide = Math.random() < 0.5 ? 'left' : 'right';
+    let eL = pool[i*2 % pool.length];
+    let eR = pool[(i*2+1) % pool.length];
+    if (eL === eR) eR = pool[(i*2+2) % pool.length];
+    qs.push({ target, correctSide,
+      leftCount:  correctSide==='left'  ? target : other,
+      rightCount: correctSide==='right' ? target : other,
+      leftEmoji: eL, rightEmoji: eR });
+  }
+  return qs;
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════════════
+function renderItems(gridEl, count, emoji) {
+  gridEl.innerHTML = '';
+  const cols = getGridCols(count);
+  gridEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  for (let i = 0; i < count; i++) {
+    const d = document.createElement('div');
+    d.className = 'item-emoji';
+    d.textContent = emoji;
+    gridEl.appendChild(d);
+  }
+}
+
+function renderQuestion() {
+  const q = state.questions[state.round];
+  state.answered = false;
+  ['bigNumber','targetLabel'].forEach(id => {
+    const el = document.getElementById(id);
+    el.textContent = q.target;
+    el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+  });
+  document.getElementById('progressBar').style.width = (state.round/TOTAL_ROUNDS*100)+'%';
+  ['cardLeft','cardRight'].forEach((id,i) => {
+    const c = document.getElementById(id);
+    c.className = 'card '+(i===0?'left':'right');
+    c.style.pointerEvents = '';
+  });
+  renderItems(document.getElementById('gridLeft'),  q.leftCount,  q.leftEmoji);
+  renderItems(document.getElementById('gridRight'), q.rightCount, q.rightEmoji);
+  document.getElementById('btnNext').classList.remove('show');
+}
+
+
+function speakPraise() {
+  try {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance('你好棒');
+    utter.lang = 'zh-TW';
+    utter.rate = 0.95;
+    utter.pitch = 1.15;
+    window.speechSynthesis.speak(utter);
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════════
+//  ANSWER
+// ══════════════════════════════════════════════════════
+function handleAnswer(side) {
+  if (state.answered) return;
+  state.answered = true;
+  const q = state.questions[state.round];
+  const correct = side === q.correctSide;
+  const card = document.getElementById(side==='left'?'cardLeft':'cardRight');
+  if (correct) {
+    card.classList.add('correct');
+    state.score++;
+    document.getElementById('correctCount').textContent = state.score;
+    saveState(); launchConfetti(); speakPraise();
+  } else {
+    card.classList.add('wrong');
+    setTimeout(() => {
+      document.getElementById(q.correctSide==='left'?'cardLeft':'cardRight').classList.add('correct');
+    }, 320);
+  }
+  document.getElementById('cardLeft').style.pointerEvents  = 'none';
+  document.getElementById('cardRight').style.pointerEvents = 'none';
+  setTimeout(() => {
+    const nb = document.getElementById('btnNext');
+    nb.textContent = state.round < TOTAL_ROUNDS-1 ? '下一題 ➡️' : '看成績 🏆';
+    nb.classList.add('show');
+  }, 500);
+}
+
+function nextQuestion() {
+  state.round++;
+  if (state.round >= TOTAL_ROUNDS) showCelebration();
+  else renderQuestion();
+}
+
+// ══════════════════════════════════════════════════════
+//  CONFETTI
+// ══════════════════════════════════════════════════════
+function launchConfetti() {
+  const colors = ['#FFB5C8','#FFE28A','#B5EAD7','#C7E9FB','#D4C5F9','#FFCBA4'];
+  for (let i = 0; i < 50; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `left:${Math.random()*100}vw;background:${colors[i%colors.length]};animation-duration:${1.4+Math.random()*2}s;animation-delay:${Math.random()*0.7}s;transform:rotate(${Math.random()*360}deg);width:${8+Math.random()*8}px;height:${12+Math.random()*10}px;`;
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  CELEBRATION
+// ══════════════════════════════════════════════════════
+function showCelebration() {
+  document.getElementById('progressBar').style.width = '100%';
+  document.getElementById('finalScore').textContent = state.score+' / '+TOTAL_ROUNDS;
+  const t = ['🌟','⭐','🎉','🏆'];
+  document.getElementById('celebEmoji').textContent = t[Math.min(Math.floor(state.score/TOTAL_ROUNDS*t.length), t.length-1)];
+  document.getElementById('celebModal').classList.add('show');
+  launchConfetti(); setTimeout(launchConfetti, 700);
+}
+
+// ══════════════════════════════════════════════════════
+//  CATEGORY UI
+// ══════════════════════════════════════════════════════
+function selectCategoryUI(cat) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('selected', b.dataset.cat===cat));
+}
+function updateHeader() {
+  const cat = CATEGORIES[state.category];
+  document.getElementById('headerIcon').textContent  = cat.icon;
+  document.getElementById('headerTitle').textContent = cat.name+' 數數';
+}
+function showStartScreen() {
+  document.getElementById('celebModal').classList.remove('show');
+  document.getElementById('gameArea').style.display = 'none';
+  const ss = document.getElementById('startScreen');
+  ss.style.display = 'flex'; ss.style.opacity = '0';
+  ss.style.transition = 'opacity 0.3s';
+  requestAnimationFrame(() => { ss.style.opacity = '1'; });
+  selectCategoryUI(state.category);
+}
+
+// ══════════════════════════════════════════════════════
+//  START / RESET
+// ══════════════════════════════════════════════════════
+function startGame() {
+  state.questions = generateQuestions();
+  state.round = 0; state.answered = false;
+  document.getElementById('startScreen').style.display = 'none';
+  const ga = document.getElementById('gameArea');
+  ga.style.display = 'flex'; ga.style.opacity = '0';
+  ga.style.transition = 'opacity 0.3s';
+  requestAnimationFrame(() => { ga.style.opacity = '1'; });
+  updateHeader(); renderQuestion();
+}
+function clearGame() {
+  state.score = 0; state.round = 0;
+  state.questions = generateQuestions(); state.answered = false;
+  document.getElementById('correctCount').textContent = '0';
+  document.getElementById('celebModal').classList.remove('show');
+  localStorage.removeItem('numGame3');
+  renderQuestion();
+}
+
+// ══════════════════════════════════════════════════════
+//  EVENTS
+// ══════════════════════════════════════════════════════
+document.querySelectorAll('.cat-btn').forEach(btn => {
+  const handler = () => {
+    state.category = btn.dataset.cat;
+    selectCategoryUI(state.category);
+    saveState();
+  };
+  btn.addEventListener('click', handler);
+  btn.addEventListener('touchend', e => { e.preventDefault(); handler(); }, { passive: false });
+});
+
+document.getElementById('btnStart').addEventListener('click', () => {
+  const ss = document.getElementById('startScreen');
+  ss.style.transition = 'opacity 0.25s, transform 0.25s';
+  ss.style.opacity = '0'; ss.style.transform = 'scale(1.04)';
+  setTimeout(startGame, 260);
+});
+
+document.getElementById('cardLeft').addEventListener('click',  () => handleAnswer('left'));
+document.getElementById('cardRight').addEventListener('click', () => handleAnswer('right'));
+['cardLeft','cardRight'].forEach(id => {
+  document.getElementById(id).addEventListener('touchend', e => {
+    e.preventDefault(); document.getElementById(id).click();
+  }, { passive: false });
+});
+
+document.getElementById('btnNext').addEventListener('click', nextQuestion);
+document.getElementById('btnClear').addEventListener('click', () => {
+  if (confirm('確定要清空紀錄嗎？')) clearGame();
+});
+document.getElementById('btnChangeCat').addEventListener('click', showStartScreen);
+document.getElementById('btnReplay').addEventListener('click', () => {
+  document.getElementById('celebModal').classList.remove('show');
+  clearGame();
+});
+document.getElementById('btnChangeCat2').addEventListener('click', showStartScreen);
+
+// ══════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════
+loadState();
+</script>
+</body>
+</html>
